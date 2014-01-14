@@ -1,43 +1,59 @@
-Handsontable.PluginHookMap = function () {
-  this.beforeInitWalkontable = [];
+Handsontable.PluginHookClass = (function () {
 
-  this.beforeInit = [];
-  this.beforeRender = [];
-  this.beforeChange = [];
-  this.beforeGet = [];
-  this.beforeSet = [];
-  this.beforeGetCellMeta = [];
-  this.beforeAutofill = [];
-  this.beforeKeyDown = [];
+  var Hooks = function () {
+    return {
+      // Hooks
+      beforeInitWalkontable: [],
 
-  this.afterInit = [];
-  this.afterLoadData = [];
-  this.afterRender = [];
-  this.afterChange = [];
-  this.afterGetCellMeta = [];
-  this.afterGetColHeader = [];
-  this.afterGetColWidth = [];
-  this.afterDestroy = [];
-  this.afterRemoveRow = [];
-  this.afterCreateRow = [];
-  this.afterRemoveCol = [];
-  this.afterCreateCol = [];
-  this.afterColumnResize = [];
-  this.afterColumnMove = [];
-  this.afterDeselect = [];
-  this.afterSelection = [];
-  this.afterSelectionByProp = [];
-  this.afterSelectionEnd = [];
-  this.afterSelectionEndByProp = [];
-  this.afterCopyLimit = [];
-};
+      beforeInit: [],
+      beforeRender: [],
+      beforeChange: [],
+      beforeRemoveCol: [],
+      beforeRemoveRow: [],
+      beforeValidate: [],
+      beforeGet: [],
+      beforeSet: [],
+      beforeGetCellMeta: [],
+      beforeAutofill: [],
+      beforeKeyDown: [],
+      beforeColumnSort: [],
 
-////
+      afterInit : [],
+      afterLoadData : [],
+      afterUpdateSettings: [],
+      afterRender : [],
+      afterRenderer : [],
+      afterChange : [],
+      afterValidate: [],
+      afterGetCellMeta: [],
+      afterGetColHeader: [],
+      afterGetColWidth: [],
+      afterDestroy: [],
+      afterRemoveRow: [],
+      afterCreateRow: [],
+      afterRemoveCol: [],
+      afterCreateCol: [],
+      afterColumnResize: [],
+      afterColumnMove: [],
+      afterColumnSort: [],
+      afterDeselect: [],
+      afterSelection: [],
+      afterSelectionByProp: [],
+      afterSelectionEnd: [],
+      afterSelectionEndByProp: [],
+      afterCopyLimit: [],
+      afterOnCellMouseDown: [],
+      afterOnCellMouseOver: [],
+      afterOnCellCornerMouseDown: [],
+      afterScrollVertically: [],
+      afterScrollHorizontally: [],
 
-Handsontable.PluginHooks = (function () {
-  var hooks = new Handsontable.PluginHookMap();
+      // Modifiers
+      modifyCol: []
+    }
+  };
 
-  var legacyEventMap = {
+  var legacy = {
     onBeforeChange: "beforeChange",
     onChange: "afterChange",
     onCreateRow: "afterCreateRow",
@@ -49,62 +65,143 @@ Handsontable.PluginHooks = (function () {
     onSelectionEndByProp: "afterSelectionEndByProp"
   };
 
-  return {
-    add: function (key, fn) {
-      // provide support for old versions of HOT
-      if (key in legacyEventMap) {
-        key = legacyEventMap[key];
-      }
+  function PluginHookClass() {
 
-      hooks[key].push(fn);
-    },
-    remove: function (key, fn) {
-      // provide support for old versions of HOT
-      if (key in legacyEventMap) {
-        key = legacyEventMap[key];
-      }
+    this.hooks = Hooks();
 
-      for (var i = 0, len = hooks[key].length; i < len; i++) {
-        if (hooks[key][i] == fn) {
-          hooks[key].splice(i, 1);
-          return true;
-        }
-      }
-      return false;
-    },
-    run: function (instance, key, p1, p2, p3, p4, p5) {
-      // provide support for old versions of HOT
-      if (key in legacyEventMap) {
-        key = legacyEventMap[key];
-      }
+    this.legacy = legacy;
 
-      //performance considerations - http://jsperf.com/call-vs-apply-for-a-plugin-architecture
-      if (typeof hooks[key] !== 'undefined') {
-        for (var i = 0, len = hooks[key].length; i < len; i++) {
-          hooks[key][i].call(instance, p1, p2, p3, p4, p5);
-        }
-      }
-    }
   }
+
+  PluginHookClass.prototype.add = function (key, fn) {
+    // provide support for old versions of HOT
+    if (key in legacy) {
+      key = legacy[key];
+    }
+
+    if (typeof this.hooks[key] === "undefined") {
+      this.hooks[key] = [];
+    }
+
+    if (Handsontable.helper.isArray(fn)) {
+      for (var i = 0, len = fn.length; i < len; i++) {
+        this.hooks[key].push(fn[i]);
+      }
+    } else {
+      if (this.hooks[key].indexOf(fn) > -1) {
+        throw new Error("Seems that you are trying to set the same plugin hook twice (" + key + ", " + fn + ")"); //error here should help writing bug-free plugins
+      }
+      this.hooks[key].push(fn);
+    }
+
+    return this;
+  };
+
+  PluginHookClass.prototype.once = function(key, fn){
+
+    if(Handsontable.helper.isArray(fn)){
+
+      for(var i = 0, len = fn.length; i < len; i++){
+        fn[i].runOnce = true;
+        this.add(key, fn[i]);
+      }
+
+    } else {
+      fn.runOnce = true;
+      this.add(key, fn);
+
+    }
+
+  };
+
+  PluginHookClass.prototype.remove = function (key, fn) {
+    var status = false;
+
+    // provide support for old versions of HOT
+    if (key in legacy) {
+      key = legacy[key];
+    }
+
+    if (typeof this.hooks[key] !== 'undefined') {
+
+      for (var i = 0, leni = this.hooks[key].length; i < leni; i++) {
+
+        if (this.hooks[key][i] == fn) {
+          delete this.hooks[key][i].runOnce;
+          this.hooks[key].splice(i, 1);
+          status = true;
+          break;
+        }
+
+      }
+
+    }
+
+    return status;
+  };
+
+  PluginHookClass.prototype.run = function (instance, key, p1, p2, p3, p4, p5) {
+
+    // provide support for old versions of HOT
+    if (key in legacy) {
+      key = legacy[key];
+    }
+
+    //performance considerations - http://jsperf.com/call-vs-apply-for-a-plugin-architecture
+    if (typeof this.hooks[key] !== 'undefined') {
+
+      //Make a copy of handler array
+      var handlers = Array.prototype.slice.call(this.hooks[key]);
+
+      for (var i = 0, leni = handlers.length; i < leni; i++) {
+        handlers[i].call(instance, p1, p2, p3, p4, p5);
+
+        if(handlers[i].runOnce){
+          this.remove(key, handlers[i]);
+        }
+      }
+
+    }
+
+  };
+
+  PluginHookClass.prototype.execute = function (instance, key, p1, p2, p3, p4, p5) {
+    var res, handlers;
+
+    // provide support for old versions of HOT
+    if (key in legacy) {
+      key = legacy[key];
+    }
+
+    //performance considerations - http://jsperf.com/call-vs-apply-for-a-plugin-architecture
+      if (typeof this.hooks[key] !== 'undefined') {
+
+        handlers = Array.prototype.slice.call(this.hooks[key]);
+
+        for (var i = 0, leni = handlers.length; i < leni; i++) {
+
+          res = handlers[i].call(instance, p1, p2, p3, p4, p5);
+          if (res !== void 0) {
+            p1 = res;
+          }
+
+          if(handlers[i].runOnce){
+            this.remove(key, handlers[i]);
+          }
+
+          if(res === false){ //if any handler returned false
+            return false; //event has been cancelled and further execution of handler queue is being aborted
+          }
+
+        }
+
+      }
+
+    return p1;
+  };
+
+  return PluginHookClass;
+
 })();
 
-Handsontable.PluginModifiers = {
-  modifiers: {
-    col: []
-  },
-
-  push: function (key, fn) {
-    this.modifiers[key].push(fn);
-  },
-
-  unshift: function (key, fn) {
-    this.modifiers[key].unshift(fn);
-  },
-
-  run: function (instance, key, p1, p2, p3, p4, p5) {
-    for (var i = 0, ilen = this.modifiers[key].length; i < ilen; i++) {
-      p1 = this.modifiers[key][i].call(instance, p1, p2, p3, p4, p5);
-    }
-    return p1;
-  }
-};
+Handsontable.PluginHooks = new Handsontable.PluginHookClass();

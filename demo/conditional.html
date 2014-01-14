@@ -91,19 +91,19 @@
       <div class="codeLayout">
         <div class="pad">
           <div class="jsFiddle">
-            <div class="jsFiddleLink" data-runfiddle="example1">Edit in jsFiddle</div>
+            <button class="jsFiddleLink" data-runfiddle="example1">Edit in jsFiddle</button>
           </div>
 
           <script data-jsfiddle="example1">
             function firstRowRenderer(instance, td, row, col, prop, value, cellProperties) {
-              Handsontable.TextCell.renderer.apply(this, arguments);
+              Handsontable.renderers.TextRenderer.apply(this, arguments);
               td.style.fontWeight = 'bold';
               td.style.color = 'green';
               td.style.background = '#CEC';
             }
 
             function negativeValueRenderer(instance, td, row, col, prop, value, cellProperties) {
-              Handsontable.TextCell.renderer.apply(this, arguments);
+              Handsontable.renderers.TextRenderer.apply(this, arguments);
               if (parseInt(value, 10) < 0) { //if row contains negative number
                 td.className = 'negative'; //add class "negative"
               }
@@ -126,7 +126,7 @@
               ["2010", '', 15, -12, "readOnly"]
             ];
 
-            Handsontable.cellLookup.renderer.negativeValueRenderer = negativeValueRenderer; //maps function to lookup string
+            Handsontable.renderers.registerRenderer('negativeValueRenderer', negativeValueRenderer); //maps function to lookup string
 
             var container = $("#example1");
             container.handsontable({
@@ -137,7 +137,7 @@
               contextMenu: true,
               onSelection: function (row, col, row2, col2) {
                 var meta = container.handsontable('getCellMeta', row2, col2);
-                if (meta.isWritable == false) {
+                if (meta.readOnly) {
                   container.handsontable('updateSettings', {fillHandle: false});
                 }
                 else {

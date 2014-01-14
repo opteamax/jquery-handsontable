@@ -5,13 +5,16 @@
  * @param strategy - all, last, none
  * @constructor
  */
-function WalkontableColumnStrategy(containerSizeFn, sizeAtIndex, strategy) {
+function WalkontableColumnStrategy(instance, containerSizeFn, sizeAtIndex, strategy) {
   var size
     , i = 0;
+
+  WalkontableCellStrategy.apply(this, arguments);
 
   this.containerSizeFn = containerSizeFn;
   this.cellSizesSum = 0;
   this.cellSizes = [];
+  this.cellStretch = [];
   this.cellCount = 0;
   this.remainingSize = 0;
   this.strategy = strategy;
@@ -40,11 +43,17 @@ function WalkontableColumnStrategy(containerSizeFn, sizeAtIndex, strategy) {
 
 WalkontableColumnStrategy.prototype = new WalkontableCellStrategy();
 
+WalkontableColumnStrategy.prototype.getSize = function (index) {
+  return this.cellSizes[index] + (this.cellStretch[index] || 0);
+};
+
 WalkontableColumnStrategy.prototype.stretch = function () {
   //step 2 - apply stretching strategy
   var containerSize = this.getContainerSize(this.cellSizesSum)
     , i = 0;
   this.remainingSize = this.cellSizesSum - containerSize;
+
+  this.cellStretch.length = 0; //clear previous stretch
 
   if (this.strategy === 'all') {
     if (this.remainingSize < 0) {
@@ -54,16 +63,16 @@ WalkontableColumnStrategy.prototype.stretch = function () {
       while (i < this.cellCount - 1) { //"i < this.cellCount - 1" is needed because last cellSize is adjusted after the loop
         newSize = Math.floor(ratio * this.cellSizes[i]);
         this.remainingSize += newSize - this.cellSizes[i];
-        this.cellSizes[i] = newSize;
+        this.cellStretch[i] = newSize - this.cellSizes[i];
         i++;
       }
-      this.cellSizes[this.cellCount - 1] -= this.remainingSize;
+      this.cellStretch[this.cellCount - 1] = -this.remainingSize;
       this.remainingSize = 0;
     }
   }
   else if (this.strategy === 'last') {
-    if (this.remainingSize < 0) {
-      this.cellSizes[this.cellCount - 1] -= this.remainingSize;
+    if (this.remainingSize < 0 && containerSize !== Infinity) { //Infinity is with native scroll when the table is wider than the viewport (TODO: test)
+      this.cellStretch[this.cellCount - 1] = -this.remainingSize;
       this.remainingSize = 0;
     }
   }

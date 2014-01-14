@@ -30,7 +30,7 @@ describe('Core_paste', function () {
     selectCell(3, 4); //selectAll
     triggerPaste('Kia\tNissan\tToyota');
 
-    waits(30);
+    waits(60);
 
     runs(function () {
       var expected = arrayOfArrays();
@@ -49,7 +49,7 @@ describe('Core_paste', function () {
     selectCell(1, 0); //selectAll
     triggerPaste('Kia\tNissan\tToyota');
 
-    waits(30);
+    waits(60);
 
     runs(function () {
       expect(getData().length).toEqual(4);
@@ -68,7 +68,7 @@ describe('Core_paste', function () {
     selectCell(1, 0); //selectAll
     triggerPaste('Kia\tNissan\tToyota');
 
-    waits(30);
+    waits(60);
 
     runs(function () {
       expect(getData().length).toEqual(6);
@@ -86,7 +86,7 @@ describe('Core_paste', function () {
     selectCell(1, 0); //selectAll
     triggerPaste('Kia\tNissan\tToyota');
 
-    waits(30);
+    waits(60);
 
     runs(function () {
       expect(getData()[0].length).toEqual(5);
@@ -105,7 +105,7 @@ describe('Core_paste', function () {
     selectCell(1, 0); //selectAll
     triggerPaste('Kia\tNissan\tToyota');
 
-    waits(30);
+    waits(60);
 
     runs(function () {
       expect(getData()[0].length).toEqual(9);
@@ -114,4 +114,104 @@ describe('Core_paste', function () {
 
   });
 
+  it('should not throw an error when changes are null in `once` hook', function () {
+    var errors = 0;
+
+    try {
+      handsontable({
+        data: arrayOfArrays(),
+        afterChange: function (changes, source) {
+          if (source === 'loadData') return;
+
+          loadData(arrayOfArrays());
+        }
+      });
+
+      selectCell(1, 0); //selectAll
+      triggerPaste('Kia\tNissan\tToyota');
+
+    } catch (e) {
+      errors++;
+    }
+
+    waits(60);
+
+    runs(function () {
+      expect(errors).toEqual(0);
+    });
+
+  });
+
+  it("should not paste any data, if no cell is selected", function () {
+
+    var hot = handsontable({
+      data: createSpreadsheetData(3, 1)
+    });
+
+    var copiedData1 = "foo";
+    var copiedData2 = "bar";
+
+    expect(this.$container.find('tbody tr:eq(0) td:eq(0)').text()).toEqual('A0');
+    expect(this.$container.find('tbody tr:eq(1) td:eq(0)').text()).toEqual('A1');
+    expect(this.$container.find('tbody tr:eq(2) td:eq(0)').text()).toEqual('A2');
+
+    expect(getSelected()).toBeUndefined();
+
+    hot.copyPaste.triggerPaste($.Event(), copiedData1);
+
+    waits(100);
+
+    runs(function(){
+      expect(this.$container.find('tbody tr:eq(0) td:eq(0)').text()).toEqual('A0');
+      expect(this.$container.find('tbody tr:eq(1) td:eq(0)').text()).toEqual('A1');
+      expect(this.$container.find('tbody tr:eq(2) td:eq(0)').text()).toEqual('A2');
+    });
+
+    runs(function(){
+      selectCell(1, 0, 2, 0);
+
+      hot.copyPaste.triggerPaste($.Event(), copiedData2);
+    });
+
+    waits(100);
+
+    runs(function(){
+      expect(this.$container.find('tbody tr:eq(0) td:eq(0)').text()).toEqual('A0');
+      expect(this.$container.find('tbody tr:eq(1) td:eq(0)').text()).toEqual(copiedData2);
+      expect(this.$container.find('tbody tr:eq(2) td:eq(0)').text()).toEqual(copiedData2);
+    });
+
+  });
+
+  it("should not paste any data, if no cell is selected (select/deselect cell using mouse)", function () {
+
+    var hot = handsontable({
+      data: createSpreadsheetData(3, 1)
+    });
+
+    var copiedData = "foo";
+
+    expect(this.$container.find('tbody tr:eq(0) td:eq(0)').text()).toEqual('A0');
+    expect(this.$container.find('tbody tr:eq(1) td:eq(0)').text()).toEqual('A1');
+    expect(this.$container.find('tbody tr:eq(2) td:eq(0)').text()).toEqual('A2');
+
+    this.$container.find('tbody tr:eq(1) td:eq(0)').mousedown();
+
+    expect(getSelected()).toEqual([1, 0, 1, 0]);
+
+    $('html').mousedown();
+
+    expect(getSelected()).toBeUndefined();
+
+    hot.copyPaste.triggerPaste($.Event(), copiedData);
+
+    waits(100);
+
+    runs(function(){
+      expect(this.$container.find('tbody tr:eq(0) td:eq(0)').text()).toEqual('A0');
+      expect(this.$container.find('tbody tr:eq(1) td:eq(0)').text()).toEqual('A1');
+      expect(this.$container.find('tbody tr:eq(2) td:eq(0)').text()).toEqual('A2');
+    });
+
+  });
 });

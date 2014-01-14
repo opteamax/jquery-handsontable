@@ -21,7 +21,7 @@ WalkontableScrollbar.prototype.init = function () {
   this.handle.className = 'handle';
 
   this.slider.appendChild(this.handle);
-  this.container = this.instance.wtTable.parent;
+  this.container = this.instance.wtTable.holder;
   this.container.appendChild(this.slider);
 
   var firstRun = true;
@@ -95,10 +95,10 @@ WalkontableScrollbar.prototype.onScroll = function (delta) {
  * @return {Number} 0..1
  */
 WalkontableScrollbar.prototype.getHandleSizeRatio = function (viewportCount, totalCount) {
-  if (!totalCount || viewportCount > totalCount) {
+  if (!totalCount || viewportCount > totalCount || viewportCount == totalCount) {
     return 1;
   }
-  return viewportCount / totalCount;
+  return 1 / totalCount;
 };
 
 WalkontableScrollbar.prototype.prepare = function () {
@@ -152,10 +152,6 @@ WalkontableScrollbar.prototype.refresh = function () {
     this.sliderStyle.height = Math.max(sliderSize, 0) + 'px';
   }
   else { //horizontal
-    if (this.instance.wtTable.columnStrategy.isLastIncomplete()) {
-      visibleCount--;
-    }
-
     sliderSize = tableWidth - 2; //2 is sliders border-width
 
     this.sliderStyle.left = this.instance.wtDom.offset(this.$table[0]).left - this.instance.wtDom.offset(this.container).left + 'px';
@@ -187,6 +183,10 @@ WalkontableScrollbar.prototype.refresh = function () {
   this.sliderStyle.display = 'block';
 };
 
+WalkontableScrollbar.prototype.destroy = function () {
+  clearInterval(this.dragdealer.interval);
+};
+
 ///
 
 var WalkontableVerticalScrollbar = function (instance) {
@@ -196,6 +196,10 @@ var WalkontableVerticalScrollbar = function (instance) {
 };
 
 WalkontableVerticalScrollbar.prototype = new WalkontableScrollbar();
+
+WalkontableVerticalScrollbar.prototype.scrollTo = function (cell) {
+  this.instance.update('offsetRow', cell);
+};
 
 WalkontableVerticalScrollbar.prototype.readSettings = function () {
   this.scrollMode = this.instance.getSetting('scrollV');
@@ -220,6 +224,10 @@ var WalkontableHorizontalScrollbar = function (instance) {
 
 WalkontableHorizontalScrollbar.prototype = new WalkontableScrollbar();
 
+WalkontableHorizontalScrollbar.prototype.scrollTo = function (cell) {
+  this.instance.update('offsetColumn', cell);
+};
+
 WalkontableHorizontalScrollbar.prototype.readSettings = function () {
   this.scrollMode = this.instance.getSetting('scrollH');
   this.offset = this.instance.getSetting('offsetColumn');
@@ -231,4 +239,11 @@ WalkontableHorizontalScrollbar.prototype.readSettings = function () {
   this.handlePosition = parseInt(this.handleStyle.left, 10);
   this.sliderSize = parseInt(this.sliderStyle.width, 10);
   this.fixedCount = this.instance.getSetting('fixedColumnsLeft');
+};
+
+WalkontableHorizontalScrollbar.prototype.getHandleSizeRatio = function (viewportCount, totalCount) {
+  if (!totalCount || viewportCount > totalCount || viewportCount == totalCount) {
+    return 1;
+  }
+  return viewportCount / totalCount;
 };

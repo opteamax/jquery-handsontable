@@ -2,7 +2,7 @@
 
 Handsontable is a minimalistic approach to Excel-like table editor in HTML & jQuery. Requires jQuery 1.9+ or 2.0+ (may work with 1.7+ too, but there are known issues with [IE10](https://github.com/warpech/jquery-handsontable/issues/410)).
 
-Runs in IE7, IE8, IE9, IE10, Firefox, Chrome, Safari and Opera.
+Runs in IE8, IE9, IE10, Firefox, Chrome, Safari and Opera.
 
 See the demos at http://handsontable.com/ or fork the example on [JSFiddle](http://jsfiddle.net/warpech/hU6Kz/).
 
@@ -45,7 +45,9 @@ To see the list of recent changes, see the [CHANGELOG.md](./CHANGELOG.md).
 
 ## Questions
 
-Before you open a new [Issue](https://github.com/warpech/jquery-handsontable/issues), please check out the [Frequently Asked Questions](https://github.com/warpech/jquery-handsontable/wiki/FAQ).
+Please use the :new: [Handsontable Google Group](https://groups.google.com/forum/?fromgroups=#!forum/handsontable) for posting general **Questions**.
+
+Make sure the question was not answered before in [FAQ](https://github.com/warpech/jquery-handsontable/wiki/FAQ) or [GitHub Issues](https://github.com/warpech/jquery-handsontable/issues)
 
 ## Reporting bugs and feature requests
 
@@ -58,16 +60,9 @@ Please follow this guidelines when reporting bugs and feature requests:
 
 Thanks for understanding!
 
-## Pull Requests
+## Contributing
 
-Your contributions to the project are very welcome! To help me merge your pull request, please make sure you follow these points:
-
-1. Describe the problem in the Pull Request description (of course you would do it, why do I mention that?)
-2. Please make your fix on a separate branch. This makes merging much easier.
-3. Do not edit files `jquery.handsontable.js`, `jquery.handsontable.css`, `jquery.handsontable.full.js`, `jquery.handsontable.full.css`. Instead, try to edit files inside the `src/` directory and then use `grunt` to make a build. More information about this on wiki page [Building](https://github.com/warpech/jquery-handsontable/wiki/Building).
-4. For any change that you make, please try to also add a test case(s) in `tests/jasmine/spec/` directory. This helps me understand the issue and make sure that it will stay fixed forever.
-
-Thank you for your commitment!
+Please see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Similar projects
 
@@ -81,6 +76,7 @@ I want to stay motivated to keep Handsontable the best possible editable datagri
  - [ParamQuery](http://paramquery.com/)
  - [Ember Table](http://addepar.github.io/ember-table/)
  - [Backgrid.js](http://backgridjs.com/)
+ - [dgrid](http://dojofoundation.org/packages/dgrid/)
 
 ## License
 
